@@ -1,0 +1,8 @@
+# JetBrains IDE project files
+.idea/
+
+# Backups created by install.sh when it rewrites ~/.claude/settings.json
+*.bak
+
+# macOS
+.DS_Store
