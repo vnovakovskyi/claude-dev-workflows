@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contributing guidelines
+    url: https://github.com/vnovakovskyi/claude-dev-workflows/blob/main/CONTRIBUTING.md
+    about: Read how to propose changes, the project scope, and how to test before opening a PR.

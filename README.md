@@ -232,3 +232,15 @@ mvp-plan
 product-plan
 phase-plan
 ```
+
+## Contributing
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for scope, the
+fork → PR → review flow, and how to test changes. In short: fork, make a small
+focused change on a branch, test it locally, and open a Pull Request against
+`main` for review.
+
+## License
+
+Licensed under the [MIT License](LICENSE) — free to use for work, study, or
+commercial purposes. © 2026 Vadym Novakovskyi.
