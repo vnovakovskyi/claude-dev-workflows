@@ -55,7 +55,7 @@ The plan must be:
 - Small enough to implement.
 - Clear enough to test.
 - Explicit about what is **in scope** and **out of scope**.
-- Split into milestones or implementation slices.
+- Split into small, independently verifiable implementation phases.
 - Honest about risks and unknowns.
 - Useful for a real developer, not just a high-level product note.
 
@@ -114,15 +114,32 @@ Internal and external dependencies.
 
 Risk → impact → mitigation.
 
-## 10. Implementation Slices
+## 10. Implementation Phases
 
-Break work into small slices.
+Break the work into small, independently verifiable **phases**. Implementation
+will be done one phase at a time, pausing for the user after each.
 
-Each slice should include:
-- Purpose
-- Files/modules likely affected
-- Expected result
-- Tests/checks
+Repeat this block per phase:
+
+### Phase N: <short descriptive name>
+
+**Goal:** What this phase accomplishes.
+
+**Files/modules likely affected:** List the probable files.
+
+**Changes:** Short description of the change.
+
+**Success criteria — Automated:**
+- [ ] <command for this repo's tooling> tests pass
+- [ ] <command> static checks / type / lint pass
+- [ ] <command> build/compile succeeds (if relevant)
+
+**Success criteria — Manual:**
+- [ ] <behaviour the user should verify by hand>
+- [ ] No regressions in <related area>
+
+> After this phase passes automated checks, **pause** and let the user confirm
+> manual verification before starting the next phase.
 
 ## 11. Testing Strategy
 
@@ -138,19 +155,8 @@ What documentation must be created or updated.
 
 ## 14. Open Questions
 
-Questions that remain unresolved.
-
-## 15. Implementation Approval
-
-Implementation is not approved yet.
-
-To enable coding when the phase gate is active, the user must manually run:
-
-```bash
-touch .claude-phase-approved
-```
-
-Do not create this file yourself.
+Questions that remain unresolved. Resolve these before implementation starts —
+a final plan should not carry unresolved blocking questions.
 ````
 
 ## Completion criteria
@@ -158,13 +164,19 @@ Do not create this file yourself.
 Planning is complete only when:
 
 - `docs/01-plan.md` exists.
-- Scope is explicit.
-- Implementation slices are listed.
-- Tests/checks are listed.
+- Scope is explicit (including an explicit "Out of Scope").
+- Work is broken into phases, each with automated and manual success criteria.
 - The next implementation step is obvious.
+
+## Do not implement
+
+This phase produces a plan only. Do **not** write code. End by asking the user
+to review `docs/01-plan.md` and, when satisfied, to run `/implement` for the
+first phase. Implementation begins only when the user explicitly invokes it.
 
 At the end of your response, summarize:
 
-1. What plan you created/updated.
+1. What plan you created/updated and how many phases it has.
 2. Whether architecture or data-model analysis is recommended before implementation.
-3. What the user must approve before coding starts.
+3. The first phase the user can implement, and the reminder that you will pause
+   after each phase for their verification.

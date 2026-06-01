@@ -22,18 +22,38 @@ Use `architecture` or `data-model` whenever needed:
 - Inside an existing service to review or redesign the data model.
 - Before a migration/refactoring task.
 
+## How the workflow keeps Claude from coding too early
+
+This repo uses a **soft, conversational gate** — no hook, no marker files in the
+normal flow. The discipline lives in the skills themselves:
+
+- `plan` produces a **phased plan** in `docs/01-plan.md`. Each phase has its own
+  **Automated** and **Manual** success-criteria checkboxes, plus an explicit
+  "Out of Scope". `plan` never writes code — it ends by asking you to review and
+  then run `/implement`.
+- `implement` does **one phase at a time**. It implements the phase, runs that
+  phase's automated checks, ticks the `- [x]` boxes in the plan, and then
+  **pauses and waits for you** to confirm manual verification before the next
+  phase.
+
+So approval is a normal conversational act (you choose to run `/implement`, and
+you confirm between phases) — there is no approval file to create, forget, or
+delete. Progress is tracked by the checkboxes inside `docs/01-plan.md`, so work
+is resumable: re-running `/implement` picks up at the first unchecked phase.
+
+> If you also want **hard** enforcement — where Claude is *physically* blocked
+> from editing code until you approve — there is an optional hook. See
+> [Optional: hard enforcement gate](#optional-hard-enforcement-gate).
+
 ## Requirements
 
-- The installer (and uninstaller) needs `python3`.
-- The phase-gate hook needs `jq`. **`jq` is a hard requirement for enforcement:**
-  if `jq` is missing, the hook fails open silently (it allows every tool call and
-  does *not* enforce the gate). The installer warns you once if `jq` is absent.
+The default install has no special requirements (just `bash`).
 
-On macOS:
+The optional hard gate (`--with-gate`) additionally needs:
 
-```bash
-brew install jq
-```
+- `python3` — to safely edit `~/.claude/settings.json`.
+- `jq` — the hook uses it to parse its input. If `jq` is missing the hook fails
+  open (allows everything, no enforcement). On macOS: `brew install jq`.
 
 ## Install
 
@@ -44,32 +64,13 @@ chmod +x install.sh uninstall.sh hooks/gate.sh
 ./install.sh
 ```
 
-The installer symlinks skills into:
+This symlinks the skills into `~/.claude/skills/`. It does **not** touch
+`~/.claude/settings.json` and installs no hook.
 
-```text
-~/.claude/skills/
-```
-
-And symlinks the hook into:
-
-```text
-~/.claude/hooks/gate.sh
-```
-
-It also adds a `PreToolUse` hook (matcher `Write|Edit|MultiEdit|NotebookEdit|Bash`) to:
-
-```text
-~/.claude/settings.json
-```
-
-Existing settings are preserved: the installer backs up `settings.json` to
-`settings.json.bak`, then appends the hook only if it is not already registered,
-so it is safe to run multiple times.
-
-> **Note:** the skills and hook are installed as *symlinks back into this repository*.
-> If you move, rename, or delete `claude-dev-workflows`, the skills and the gate will
-> silently stop working. Keep the repo in a stable location (and re-run `./install.sh`
-> if you move it).
+> **Note:** the skills are installed as *symlinks back into this repository*. If
+> you move, rename, or delete `claude-dev-workflows`, the skills will stop
+> working. Keep the repo in a stable location (and re-run `./install.sh` if you
+> move it).
 
 ## Installed skills
 
@@ -81,91 +82,31 @@ so it is safe to run multiple times.
 /data-model
 ```
 
-## Recommended usage in a new project
+## Usage
 
-> **Important: marker files are per-project, not global.**
-> `install.sh` is run **once** from this repo and sets up the skills + hook globally
-> in `~/.claude/`. The two `touch` commands below are different — they create marker
-> files **inside the specific project you are working in** (e.g. `~/code/my-app`), and
-> the hook looks for them in that project's working directory. Run them from the root
-> of the project you want gated, not from `claude-dev-workflows`.
-
-Enable strict phase gating (run this **in your project's root**):
-
-```bash
-cd ~/code/my-app   # your actual project, not claude-dev-workflows
-touch .claude-phase-gate
-```
-
-Then run Claude Code inside the project:
-
-```bash
-claude
-```
-
-Use the main workflow:
+Run Claude Code inside your project and use the main workflow:
 
 ```text
 /research <idea, feature, migration, or problem>
 /plan <what should be planned>
 ```
 
-Optionally run:
+Optionally run, when useful (e.g. after research, before planning):
 
 ```text
 /architecture <what architecture should be analyzed or designed>
 /data-model <what data model should be analyzed or designed>
 ```
 
-When you personally approve implementation, run this manually in your terminal:
-
-```bash
-touch .claude-phase-approved
-```
-
-Then:
+Review the plan in `docs/01-plan.md`, then implement phase by phase:
 
 ```text
-/implement <next slice from the plan>
+/implement <optional: a specific phase>
 ```
 
-## Version control of the marker files
-
-The marker files live in each working project, so whether to commit them is a
-per-project decision made in that project's `.gitignore`.
-
-- **`.claude-phase-approved` — recommended to gitignore.** It is transient, local,
-  per-developer state ("I approve coding right now"). If it is committed, every clone
-  of that project is permanently "approved" and the gate stops doing anything.
-- **`.claude-phase-gate` — your choice:**
-  - *Commit it* if you want the gate shared with the team (everyone who has this hook
-    installed gets gating in that project).
-  - *Gitignore it* if the gate is your personal workflow only.
-
-  Either way, for anyone who does **not** have this repo's hook installed, the marker
-  is just an inert empty file and changes nothing.
-
-Suggested per-project `.gitignore` (adjust to your needs):
-
-```gitignore
-# Local implementation approval — never commit (would disable the gate on clone)
-.claude-phase-approved
-
-# Phase-gate opt-in: uncomment to keep it personal/local instead of shared.
-# .claude-phase-gate
-```
-
-## Why manual approval?
-
-The approval file is intentionally manual.
-
-If Claude can create the approval file by itself, the phase gate becomes weaker. The intended flow is:
-
-1. Claude researches.
-2. Claude plans.
-3. You review the plan.
-4. You approve implementation by creating `.claude-phase-approved`.
-5. Claude can code.
+`/implement` will implement one phase, run its checks, tick its boxes, and pause
+for your manual verification. Tell it to continue when you're ready for the next
+phase.
 
 ## Generated docs
 
@@ -185,50 +126,85 @@ docs/00-research.md
 docs/01-plan.md
 ```
 
-> The numbers (`00`–`03`) indicate **document type**, not execution order. You can run
-> `architecture` or `data-model` after research and before planning even though their
-> files are numbered after `01-plan.md`.
+> The numbers (`00`–`03`) indicate **document type**, not execution order. You can
+> run `architecture` or `data-model` after research and before planning even
+> though their files are numbered after `01-plan.md`.
 
-## Phase gate behavior
+## Optional: hard enforcement gate
 
-If `.claude-phase-gate` exists and `.claude-phase-approved` does not exist, the hook allows planning/documentation edits but blocks source-code edits.
+If you want Claude to be *physically* unable to edit code before you approve
+(rather than relying on the skills' instructions), install the optional hook:
 
-Allowed before approval:
-
-```text
-docs/**
-CLAUDE.md
-.claude/**
-README.md
+```bash
+./install.sh --with-gate
 ```
 
-Blocked before approval:
+This symlinks `hooks/gate.sh` into `~/.claude/hooks/` and adds a `PreToolUse`
+hook (matcher `Write|Edit|MultiEdit|NotebookEdit|Bash`) to
+`~/.claude/settings.json`. Existing settings are preserved: the installer backs
+up `settings.json` to `settings.json.bak`, then appends the hook only if it
+isn't already registered, so it is safe to run multiple times.
 
-```text
-source files
-configuration files
-build files
-migration files
-file-mutating shell commands
+The gate is **opt-in per project** via a marker file. In a project's root:
+
+```bash
+touch .claude-phase-gate          # enable the gate for this project
 ```
 
-The Bash check is intentionally a **soft backstop**, not a full shell parser. It blocks:
+While the gate is active and implementation is **not** approved, Claude may edit
+docs/planning files but source-code edits are blocked. To approve:
 
-- File-mutating commands: `rm rmdir mv cp touch mkdir chmod chown ln dd tee truncate`,
-  `sed -i`, `perl -pi`.
-- Output redirection into a file (`> file`, `>> file`, `2> file`, `&> file`).
+```bash
+touch .claude-phase-approved      # approve implementation (run this yourself)
+```
 
-It deliberately does **not** block:
+Approval requires `docs/00-research.md` and `docs/01-plan.md` to exist plus the
+`.claude-phase-approved` file. Do **not** let Claude create `.claude-phase-approved`
+itself — that would defeat the gate (the gate blocks Claude from creating it).
 
-- Read-only redirections such as `2>&1`, `2>/dev/null`, `> /dev/null` — so commands
-  like `npm test 2>&1` are not blocked.
-- Interpreters and build tools (`python`, `node`, `npm`, `make`, …) — these are useful
-  during research/inspection, and the skills' own rules already forbid writing code in
-  the research/plan phases.
+### Gate behavior
 
-Because it is heuristic, it can be bypassed (e.g. a script that writes files from inside
-an interpreter) and it can occasionally over-block. If it blocks something harmless,
-either approve implementation or temporarily remove `.claude-phase-gate`.
+Allowed before approval: `docs/**`, `CLAUDE.md`, `.claude/**`, `README.*`.
+
+Blocked before approval: source/config/build/migration file edits, and
+file-mutating shell commands. The Bash check is a **soft backstop** (not a full
+shell parser):
+
+- Blocks: `rm rmdir mv cp touch mkdir chmod chown ln dd tee truncate`, `sed -i`,
+  `perl -pi`, and output redirection into a file (`> file`, `>> file`, etc.).
+- Allows: read-only redirections (`2>&1`, `2>/dev/null`) and interpreters/build
+  tools (`python`, `node`, `npm`, `make`, …), so research isn't obstructed.
+
+If it ever blocks something harmless, approve implementation or temporarily
+`rm .claude-phase-gate`.
+
+### Caveat: approval is a persistent flag
+
+`.claude-phase-approved` stays until you remove it, so if you re-run `/plan`
+after approving, the *old* approval is still in effect. With the gate, remove the
+file (`rm .claude-phase-approved`) when you re-plan. The soft (default) workflow
+avoids this entirely because it has no approval file.
+
+### Version control of the gate's marker files
+
+The marker files live in each working project, so committing them is a
+per-project decision (made in that project's `.gitignore`):
+
+- **`.claude-phase-approved` — recommended to gitignore.** It is transient, local,
+  per-developer state. If committed, every clone is permanently "approved".
+- **`.claude-phase-gate` — your choice:** commit it to share the gate with the
+  team, or gitignore it to keep the gate personal. For anyone without the hook
+  installed, the marker is an inert empty file and changes nothing.
+
+Suggested per-project `.gitignore`:
+
+```gitignore
+# Local implementation approval — never commit (would disable the gate on clone)
+.claude-phase-approved
+
+# Phase-gate opt-in: uncomment to keep it personal/local instead of shared.
+# .claude-phase-gate
+```
 
 ## Uninstall
 
@@ -238,30 +214,18 @@ Run the uninstaller from this repository:
 ./uninstall.sh
 ```
 
-It removes the skill and hook symlinks (only if they point back into this repo),
-removes the `gate.sh` `PreToolUse` entry from `~/.claude/settings.json` (backing the
-file up to `settings.json.bak` first), and leaves all your other settings intact.
-Per-project marker files (`.claude-phase-gate` / `.claude-phase-approved`) are left
-untouched.
-
-If you prefer to do it by hand:
-
-```bash
-rm -f ~/.claude/hooks/gate.sh
-rm -f ~/.claude/skills/research \
-      ~/.claude/skills/plan \
-      ~/.claude/skills/implement \
-      ~/.claude/skills/architecture \
-      ~/.claude/skills/data-model
-```
-
-Then remove the `gate.sh` hook entry from `~/.claude/settings.json`.
+It removes the skill symlinks (only if they point back into this repo) and, if
+the optional gate was installed, removes the `gate.sh` symlink and its
+`PreToolUse` entry from `~/.claude/settings.json` (backing the file up to
+`settings.json.bak` first), leaving all your other settings intact. Per-project
+marker files are left untouched.
 
 ## Note about `/plan`
 
 `plan` is a short and convenient name, but it is also generic.
 
-If it conflicts with an existing Claude Code command or your own setup, rename the skill folder and frontmatter name to something more specific, for example:
+If it conflicts with an existing Claude Code command or your own setup, rename
+the skill folder and frontmatter `name` to something more specific, for example:
 
 ```text
 mvp-plan
