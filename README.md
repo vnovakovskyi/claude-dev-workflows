@@ -83,9 +83,17 @@ so it is safe to run multiple times.
 
 ## Recommended usage in a new project
 
-Enable strict phase gating:
+> **Important: marker files are per-project, not global.**
+> `install.sh` is run **once** from this repo and sets up the skills + hook globally
+> in `~/.claude/`. The two `touch` commands below are different — they create marker
+> files **inside the specific project you are working in** (e.g. `~/code/my-app`), and
+> the hook looks for them in that project's working directory. Run them from the root
+> of the project you want gated, not from `claude-dev-workflows`.
+
+Enable strict phase gating (run this **in your project's root**):
 
 ```bash
+cd ~/code/my-app   # your actual project, not claude-dev-workflows
 touch .claude-phase-gate
 ```
 
@@ -119,6 +127,32 @@ Then:
 
 ```text
 /implement <next slice from the plan>
+```
+
+## Version control of the marker files
+
+The marker files live in each working project, so whether to commit them is a
+per-project decision made in that project's `.gitignore`.
+
+- **`.claude-phase-approved` — recommended to gitignore.** It is transient, local,
+  per-developer state ("I approve coding right now"). If it is committed, every clone
+  of that project is permanently "approved" and the gate stops doing anything.
+- **`.claude-phase-gate` — your choice:**
+  - *Commit it* if you want the gate shared with the team (everyone who has this hook
+    installed gets gating in that project).
+  - *Gitignore it* if the gate is your personal workflow only.
+
+  Either way, for anyone who does **not** have this repo's hook installed, the marker
+  is just an inert empty file and changes nothing.
+
+Suggested per-project `.gitignore` (adjust to your needs):
+
+```gitignore
+# Local implementation approval — never commit (would disable the gate on clone)
+.claude-phase-approved
+
+# Phase-gate opt-in: uncomment to keep it personal/local instead of shared.
+# .claude-phase-gate
 ```
 
 ## Why manual approval?
