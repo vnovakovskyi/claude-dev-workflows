@@ -26,12 +26,16 @@ Standalone skills for writing, outside the workflow:
 
 ```text
 fact-check
+coherence-check
 voice-check
 ```
 
 Use them on an article or draft before publishing — especially one written with
-AI help: `fact-check` for what it says, `voice-check` for how it sounds. See
-[Fact-checking a text](#fact-checking-a-text) and
+AI help: `fact-check` for what it says, `coherence-check` for whether it holds
+together, `voice-check` for how it sounds. Run them in that order: fix the
+structure before polishing sentences that may move. See
+[Fact-checking a text](#fact-checking-a-text),
+[Checking that a text holds together](#checking-that-a-text-holds-together), and
 [Checking the voice of a text](#checking-the-voice-of-a-text).
 
 ## How the workflow keeps Claude from coding too early
@@ -93,6 +97,7 @@ This symlinks the skills into `~/.claude/skills/`. It does **not** touch
 /architecture
 /data-model
 /fact-check
+/coherence-check
 /voice-check
 ```
 
@@ -158,6 +163,27 @@ Unlike the workflow phases, `fact-check`:
   article"), and uses `WebSearch`/`WebFetch` and read-only `git`/`gh` commands
   without a permission prompt while it runs (downloading raw source files with
   `curl` still asks).
+
+## Checking that a text holds together
+
+```text
+/coherence-check <file | PR URL or number | branch:path | pasted text> [draft: <earlier version>]
+```
+
+`coherence-check` reads a text as one piece. It first builds a map — what the
+title, excerpt, and intro promise, the one-sentence through-line, and the job of
+each section — and then looks for what tears it: broken promises, lost threads,
+detours, jumps without a bridge, wrong order, repeats, drift, an ending that
+misses the opening. It pays special attention to **seams** left when a person
+edits an AI draft: a term that changes halfway, a back-reference to a removed
+passage, "two decisions" followed by four points.
+
+`scripts/skeleton.py` prints the headings and the first sentence of every
+paragraph with line numbers — they should tell the story on their own — plus
+every back-reference and announced count to verify. Given an earlier draft
+(`draft:`, the file's git history, or the PR's commits), it checks the edges of
+every edited region. Fixes are structural — move, cut, merge, or a one-sentence
+bridge — and anything that needs content only you can write is marked ✍️.
 
 ## Checking the voice of a text
 
