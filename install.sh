@@ -135,6 +135,7 @@ echo "  /plan"
 echo "  /implement"
 echo "  /architecture"
 echo "  /data-model"
+echo "  /fact-check"
 echo
 if [[ "$WITH_GATE" == "1" ]]; then
   echo "Optional hard gate is ENABLED."

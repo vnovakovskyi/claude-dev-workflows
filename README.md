@@ -22,6 +22,15 @@ Use `architecture` or `data-model` whenever needed:
 - Inside an existing service to review or redesign the data model.
 - Before a migration/refactoring task.
 
+Standalone skill, outside the workflow:
+
+```text
+fact-check
+```
+
+Use `fact-check` on an article or draft before publishing — especially one
+written with AI help. See [Fact-checking a text](#fact-checking-a-text).
+
 ## How the workflow keeps Claude from coding too early
 
 This repo uses a **soft, conversational gate** — no hook, no marker files in the
@@ -80,6 +89,7 @@ This symlinks the skills into `~/.claude/skills/`. It does **not** touch
 /implement
 /architecture
 /data-model
+/fact-check
 ```
 
 ## Usage
@@ -108,9 +118,46 @@ Review the plan in `docs/01-plan.md`, then implement phase by phase:
 for your manual verification. Tell it to continue when you're ready for the next
 phase.
 
+## Fact-checking a text
+
+```text
+/fact-check <file | PR URL or number | branch:path | pasted text | nothing = the draft in this conversation>
+```
+
+`fact-check` extracts every checkable claim — dates, ages, people, companies,
+product names (including outdated or renamed ones), versions, numbers, terminal
+commands and flags, code/API names, quotes, links, and technical statements
+about how things work — from the text **and its illustrations** (alt texts, SVG
+labels, screenshots). It runs a sanity pass (impossible values, internal
+contradictions, arithmetic), verifies the rest against primary sources — source
+code for claims about internals — and returns tables of mismatches, split into
+"fix before publishing" and "worth fixing":
+
+```text
+| # | Where | Fragment | Verdict | What's wrong | Correct version | Source |
+```
+
+Verdicts: ❌ false · 🕰 outdated · ⚠️ inaccurate · ❓ unverifiable. The report
+states which versions it checked against. Verified claims are only counted, and
+claims about your own experience are listed separately, since only you can check
+them.
+
+A draft in a pull request is read straight from its branch (`git show`, or `gh`
+when the repo isn't cloned) — nothing is checked out.
+
+Unlike the workflow phases, `fact-check`:
+
+- writes no files and never edits the article — it offers to apply the fixes
+  after the report;
+- never runs commands from the text — it checks them against documentation;
+- can also be triggered without the slash command (e.g. "fact-check this
+  article"), and uses `WebSearch`/`WebFetch` and read-only `git`/`gh` commands
+  without a permission prompt while it runs (downloading raw source files with
+  `curl` still asks).
+
 ## Generated docs
 
-The skills write these files:
+The workflow skills write these files:
 
 ```text
 docs/00-research.md
