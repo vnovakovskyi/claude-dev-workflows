@@ -22,14 +22,17 @@ Use `architecture` or `data-model` whenever needed:
 - Inside an existing service to review or redesign the data model.
 - Before a migration/refactoring task.
 
-Standalone skill, outside the workflow:
+Standalone skills for writing, outside the workflow:
 
 ```text
 fact-check
+voice-check
 ```
 
-Use `fact-check` on an article or draft before publishing — especially one
-written with AI help. See [Fact-checking a text](#fact-checking-a-text).
+Use them on an article or draft before publishing — especially one written with
+AI help: `fact-check` for what it says, `voice-check` for how it sounds. See
+[Fact-checking a text](#fact-checking-a-text) and
+[Checking the voice of a text](#checking-the-voice-of-a-text).
 
 ## How the workflow keeps Claude from coding too early
 
@@ -90,6 +93,7 @@ This symlinks the skills into `~/.claude/skills/`. It does **not** touch
 /architecture
 /data-model
 /fact-check
+/voice-check
 ```
 
 ## Usage
@@ -154,6 +158,30 @@ Unlike the workflow phases, `fact-check`:
   article"), and uses `WebSearch`/`WebFetch` and read-only `git`/`gh` commands
   without a permission prompt while it runs (downloading raw source files with
   `curl` still asks).
+
+## Checking the voice of a text
+
+```text
+/voice-check <file | PR URL or number | branch:path | pasted text> [style: <your own texts>]
+```
+
+`voice-check` reads an article for the things that make it sound AI-written —
+dash-heavy punctuation, "not X, but Y" antitheses, rhetorical questions answered
+at once, aphoristic closers, stock phrases, officialese, translationese, and a
+text with no person in it — in English, Ukrainian, and Russian. A small script
+(`scripts/text_stats.py`) counts what is hard to see by eye: sentence rhythm,
+punctuation density, repeated openers, and filler words, each with line numbers.
+
+Pass `style:` with texts you wrote yourself (ideally without AI help — notes,
+messages, drafts) and it builds a short profile of your voice and aims its
+suggestions at it, without copying your phrases. Without samples it falls back
+to plain, direct, spoken language.
+
+The report has two tables — "gives away AI" and "polish" — each with a concrete
+rewrite in the text's language, plus what already sounds alive and should be
+kept, and places where a detail only you know would make the text yours. Like
+`fact-check`, it never edits the text without asking, keeps every fact intact,
+and never invents experiences or opinions for you.
 
 ## Generated docs
 
