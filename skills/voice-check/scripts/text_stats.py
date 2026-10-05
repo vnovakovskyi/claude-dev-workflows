@@ -6,8 +6,9 @@ counting by eye — sentence rhythm, punctuation density, repeated openers, fill
 words, and a few construction patterns, each with line numbers.
 
 Usage: text_stats.py <file> [--lang en|uk|ru]
-Standard library only. Code blocks, front matter, HTML tags, tables and inline
-code are excluded from the prose.
+Standard library only. Code blocks, HTML tags, tables and inline code are
+excluded from the prose. So is front matter, except the fields a reader sees:
+title, subtitle, excerpt, description, summary.
 """
 import argparse
 import re
@@ -61,15 +62,47 @@ def detect_lang(text):
     return "en"
 
 
+# Front-matter fields a reader sees: on listing pages, in search results, in link previews.
+READER_FACING = ("title", "subtitle", "excerpt", "description", "summary")
+BLOCK_MARKS = (">", "|", ">-", "|-", ">+", "|+")
+
+
+def front_matter(lines):
+    """Return (index of the first body line, [(line_no, key, text)] for reader-facing fields)."""
+    if not lines or lines[0].strip() != "---":
+        return 0, []
+    end = 1
+    while end < len(lines) and lines[end].strip() != "---":
+        end += 1
+    fields, key, start, parts = [], None, 0, []
+
+    def flush():
+        text = " ".join(parts).strip().strip("\"'")
+        if key in READER_FACING and text:
+            fields.append((start, key, text))
+
+    for n in range(1, end):
+        line = lines[n]
+        m = re.match(r"([A-Za-z_-]+):\s*(.*)$", line)
+        if m:  # a top-level key; a block scalar keeps its text on the following lines
+            flush()
+            key, value = m.group(1).lower(), m.group(2).strip()
+            start, parts = n + 1, ([] if value in BLOCK_MARKS else [value])
+        elif key and line[:1].isspace() and line.strip():
+            parts.append(line.strip())
+    flush()
+    return end + 1, fields
+
+
 def prose_lines(raw):
     """Yield (line_no, kind, text) for prose, with markup stripped."""
     lines = raw.splitlines()
-    i = 0
-    if lines and lines[0].strip() == "---":  # front matter
-        i = 1
-        while i < len(lines) and lines[i].strip() != "---":
-            i += 1
-        i += 1
+    i, fields = front_matter(lines)
+    for n, key, text in fields:
+        # the title behaves like a heading; an excerpt or description is a paragraph of its own
+        yield n, "heading" if key == "title" else "item", text
+    if fields:
+        yield i, "blank", ""
     in_code = False
     for n in range(i, len(lines)):
         line = lines[n]
@@ -126,6 +159,9 @@ def main():
 
     print(f"# text_stats — {args.file}")
     print(f"language: {lang} · words: {nwords} · sentences: {len(lens)} · paragraphs/items: {len(units)}")
+    fields = front_matter(raw.splitlines())[1]
+    if fields:
+        print("front matter read as text: " + ", ".join(f"{key} (L{n})" for n, key, _ in fields))
     mean, sd = statistics.mean(lens), statistics.pstdev(lens)
     band = sum(10 <= x <= 25 for x in lens) / len(lens)
     print(f"sentence length: mean {mean:.1f}, median {statistics.median(lens)}, stdev {sd:.1f}, "

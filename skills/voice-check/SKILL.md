@@ -64,6 +64,12 @@ Where the text comes from:
 - **Empty** → the draft most recently discussed in this conversation; if
   ambiguous, ask one short question.
 
+**Front matter is text too.** The fields a reader sees — `title`, `subtitle`,
+`excerpt`, `description`, `summary` — show up on listing pages, in search results,
+and in link previews, often before the article itself. Read them with the same
+ear as the body: an excerpt is easily left over from an earlier draft or a
+translation.
+
 **Style samples** come after `style:` — files, globs, or URLs of texts the author
 wrote. If none are given, use generic rules; don't ask for samples. But when you
 can see text the author clearly wrote by hand (e.g. passages they just edited
@@ -84,7 +90,8 @@ python3 <skill-dir>/scripts/text_stats.py <file> [--lang en|uk|ru]
 For pasted text or a PR file, write it to a temp file first. The script reports
 sentence-length rhythm, punctuation per 1000 words, bold lead-ins, repeated
 sentence openers, filler words, and construction patterns — each with line
-numbers. **These are signals, not verdicts:** read every flagged line in context.
+numbers. It counts the reader-facing front-matter fields in and names the ones
+it found. **These are signals, not verdicts:** read every flagged line in context.
 
 ## Step 3 — Build the voice profile (only with samples)
 
@@ -108,7 +115,8 @@ Two cautions:
 ## Step 4 — Read for tells
 
 Read `references/tells.md`: **Universal** plus the section for the text's
-language. Then go through the text paragraph by paragraph, looking at:
+language. Then go through the text — the front-matter title and excerpt first,
+then the body paragraph by paragraph — looking at:
 
 1. **Typography and formatting** — dashes, bold, emoji, lists, headings.
 2. **Constructions** — "not X, but Y", triads, rhetorical question + answer,
@@ -191,7 +199,7 @@ one short line at the end — this is not a proofreading pass.
 
 ## Before you send — self-check
 
-- [ ] The whole text was read, including headings, lists, captions, and alt texts.
+- [ ] The whole text was read, including the front-matter title and excerpt, headings, lists, captions, and alt texts.
 - [ ] Every script signal was checked in context before it became a finding.
 - [ ] Each language norm was respected — no grammatical dashes or quotes flagged.
 - [ ] No suggestion changes a fact, a number, or a technical claim.
