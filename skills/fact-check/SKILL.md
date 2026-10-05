@@ -83,8 +83,9 @@ checked against it.
 
 ## Step 2 — Extract atomic claims
 
-Go through the text sentence by sentence — **including headings, captions, code
-blocks, tables, footnotes, link texts, and image alt texts**. Split compound
+Go through the text sentence by sentence — **including the front-matter fields a
+reader sees (title, excerpt, description), headings, captions, code blocks,
+tables, footnotes, link texts, and image alt texts**. Split compound
 sentences into atomic claims, each checkable on its own. Extract too many rather
 than too few.
 
@@ -267,7 +268,7 @@ fix, say so explicitly and state how many claims were checked.
 
 ## Before you send — self-check
 
-- [ ] Headings, code blocks, tables, link texts, and alt texts were scanned, not only prose.
+- [ ] Front-matter title and excerpt, headings, code blocks, tables, link texts, and alt texts were scanned, not only prose.
 - [ ] Every illustration was read: SVG text, raster labels.
 - [ ] Every flagged claim was reread in its paragraph — it is not a simplification that holds in context.
 - [ ] Every ❌ / 🕰 / ⚠️ has a source or explicit reasoning.

@@ -136,8 +136,8 @@ phase.
 `fact-check` extracts every checkable claim — dates, ages, people, companies,
 product names (including outdated or renamed ones), versions, numbers, terminal
 commands and flags, code/API names, quotes, links, and technical statements
-about how things work — from the text **and its illustrations** (alt texts, SVG
-labels, screenshots). It runs a sanity pass (impossible values, internal
+about how things work — from the text, its front-matter title and excerpt, **and
+its illustrations** (alt texts, SVG labels, screenshots). It runs a sanity pass (impossible values, internal
 contradictions, arithmetic), verifies the rest against primary sources — source
 code for claims about internals — and returns tables of mismatches, split into
 "fix before publishing" and "worth fixing":
@@ -191,7 +191,8 @@ bridge — and anything that needs content only you can write is marked ✍️.
 /voice-check <file | PR URL or number | branch:path | pasted text> [style: <your own texts>]
 ```
 
-`voice-check` reads an article for the things that make it sound AI-written —
+`voice-check` reads an article, front-matter title and excerpt included, for the
+things that make it sound AI-written —
 dash-heavy punctuation, "not X, but Y" antitheses, rhetorical questions answered
 at once, aphoristic closers, stock phrases, officialese, translationese, and a
 text with no person in it — in English, Ukrainian, and Russian. A small script
